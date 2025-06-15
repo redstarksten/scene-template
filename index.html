@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Veo 3 Prompt Generator</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4caf50"/>
+  <link rel="icon" href="icon.png" type="image/png">
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; background: #f2f2f2; }
+    textarea, select, input { width: 100%; margin: 0.5rem 0; padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc; }
+    button { padding: 0.5rem 1rem; margin: 0.5rem 0.25rem; }
+    pre { white-space: pre-wrap; background: #fff; padding: 1rem; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+<h1>🎬 Veo 3 Prompt Generator</h1>
+
+<label>Scene Number:</label>
+<input type="text" id="scene_number">
+
+<label>Scene Title:</label>
+<input type="text" id="scene_title">
+
+<label>Duration (seconds):</label>
+<input type="text" id="duration">
+
+<label>Main Character:</label>
+<textarea id="main_character"></textarea>
+
+<label>Setting:</label>
+<textarea id="main_setting"></textarea>
+
+<label>Visual Style:</label>
+<select onchange="updateFromSelect(this, 'visual_style')">
+  <option value="">-- Pilih Style --</option>
+  <option value="Cinematic, rich shadows, subtle grain">🎬 Cinematic</option>
+  <option value="Comedic tone, bright saturated colors, slightly cartoonish proportions">🎭 Comedic Cartoon</option>
+  <option value="High contrast noir, film grain, moody lighting">🕵️ Noir</option>
+  <option value="Vibrant fantasy with magical sparkles and glowing elements">🧚 Fantasy</option>
+  <option value="__custom__">✏️ Isi sendiri</option>
+  <option value="__ai__">🤖 Biarkan AI yang memilih</option>
+</select>
+<textarea id="visual_style" rows="2"></textarea>
+
+<label>Camera Movement:</label>
+<select onchange="updateFromSelect(this, 'camera_movement')">
+  <option value="">-- Pilih Kamera --</option>
+  <option value="Slow dolly-in">🎥 Dolly in</option>
+  <option value="Wide tracking shot">🚶 Tracking Shot</option>
+  <option value="Handheld close-up with shaky motion">🎬 Handheld Shaky</option>
+  <option value="360 orbit shot around character">🌀 Orbit Shot</option>
+  <option value="__custom__">✏️ Isi sendiri</option>
+  <option value="__ai__">🤖 Biarkan AI yang memilih</option>
+</select>
+<textarea id="camera_movement" rows="2"></textarea>
+
+<label>Character Action:</label>
+<select onchange="updateFromSelect(this, 'character_action')">
+  <option value="">-- Pilih Aksi --</option>
+  <option value="Karakter duduk lalu menoleh dan mengangkat alis">🪑 Duduk & Lirik</option>
+  <option value="Karakter membuka pintu dan terkejut">🚪 Kaget</option>
+  <option value="Karakter berjalan sambil memegang foto">🖼️ Jalan sambil lihat foto</option>
+  <option value="__custom__">✏️ Isi sendiri</option>
+  <option value="__ai__">🤖 Biarkan AI yang memilih</option>
+</select>
+<textarea id="character_action" rows="2"></textarea>
+
+<label>VFX:</label>
+<select onchange="updateFromSelect(this, 'vfx_description')">
+  <option value="">-- Pilih Efek Visual --</option>
+  <option value="Lampu berkedip, bayangan lembut">💡 Flickering Light</option>
+  <option value="Cartoon sparks when surprised">⚡ Cartoon Sparks</option>
+  <option value="Slow motion glass breaking">🧊 Slow-mo Break</option>
+  <option value="Holographic interface popping up">💾 Hologram UI</option>
+  <option value="__custom__">✏️ Isi sendiri</option>
+  <option value="__ai__">🤖 Biarkan AI yang memilih</option>
+</select>
+<textarea id="vfx_description" rows="2"></textarea>
+
+<label>SFX:</label>
+<select onchange="updateFromSelect(this, 'sfx_description')">
+  <option value="">-- Pilih Efek Suara --</option>
+  <option value="Ambient bass, bunyi klik kamera">🎼 Ambient + Click</option>
+  <option value="Robot beep dan suara servo">🤖 Robotik</option>
+  <option value="Tawa penonton dan decak kagum">😂 Laugh & Wow</option>
+  <option value="Langkah kaki di lorong kosong">👣 Echo Steps</option>
+  <option value="__custom__">✏️ Isi sendiri</option>
+  <option value="__ai__">🤖 Biarkan AI yang memilih</option>
+</select>
+<textarea id="sfx_description" rows="2"></textarea>
+
+<label>Dialog (Bahasa Indonesia):</label>
+<textarea id="dialog_text" rows="2"></textarea>
+
+<label>Prompt Language:</label>
+<select id="lang">
+  <option value="id">🇮🇩 Bahasa Indonesia</option>
+  <option value="en">🇺🇸 English</option>
+</select>
+
+<button onclick="generatePrompt()">Generate</button>
+<button onclick="copyOutput()">Salin Output</button>
+<button onclick="exportToTxt()">Export ke TXT</button>
+
+<pre id="output"></pre>
+
+<script>
+function s(id) { return document.getElementById(id).value; }
+
+function updateFromSelect(selectEl, targetId) {
+  const value = selectEl.value;
+  document.getElementById(targetId).value = (value === "__custom__") ? "" :
+    (value === "__ai__") ? "Biarkan AI memilih yang cocok." : value;
+}
+
+function generatePrompt() {
+  const lang = s("lang");
+  const isEN = lang === "en";
+  const text = isEN ? \`
+🎬 SCENE \${s("scene_number")} – "\${s("scene_title")}"
+**Duration:** \${s("duration")} seconds
+
+**Main Character:**  
+\${s("main_character")}
+
+**Setting:**  
+\${s("main_setting")}
+
+**Visual Style:**  
+\${s("visual_style")}
+
+**Camera Movement:**  
+\${s("camera_movement")}
+
+**Character Action:**  
+\${s("character_action")}
+
+**VFX:**  
+\${s("vfx_description")}
+
+**SFX:**  
+\${s("sfx_description")}
+
+**Dialog (in Bahasa Indonesia):**  
+"_\${s("dialog_text")}_"
+  \`.trim() : \`
+🎬 ADEGAN \${s("scene_number")} – "\${s("scene_title")}"
+**Durasi:** \${s("duration")} detik
+
+**Karakter Utama:**  
+\${s("main_character")}
+
+**Setting:**  
+\${s("main_setting")}
+
+**Gaya Visual:**  
+\${s("visual_style")}
+
+**Gerakan Kamera:**  
+\${s("camera_movement")}
+
+**Aksi Karakter:**  
+\${s("character_action")}
+
+**VFX:**  
+\${s("vfx_description")}
+
+**SFX:**  
+\${s("sfx_description")}
+
+**Dialog (dalam Bahasa Indonesia):**  
+"_\${s("dialog_text")}_"
+  \`.trim();
+  document.getElementById("output").textContent = text;
+}
+
+function copyOutput() {
+  navigator.clipboard.writeText(document.getElementById("output").textContent);
+}
+
+function exportToTxt() {
+  const text = document.getElementById("output").textContent;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "scene_prompt.txt";
+  a.click();
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+<h3>🔑 Enhance by Gemini AI</h3>
+<label>Gemini API Key:</label>
+<input type="text" id="apikey" placeholder="Masukkan API Key Gemini" />
+<button onclick="saveAPIKey()">💾 Simpan API Key</button>
+<a href="https://aistudio.google.com/app/apikey" target="_blank"><button>🔗 Get API Key</button></a>
+<button onclick="enhancePrompt()">✨ Enhance with AI</button>
+<script>
+function saveAPIKey() {
+  const key = document.getElementById('apikey').value;
+  localStorage.setItem('gemini_apikey', key);
+  alert("API Key disimpan!");
+}
+function loadAPIKey() {
+  const key = localStorage.getItem('gemini_apikey');
+  if (key) document.getElementById('apikey').value = key;
+}
+window.onload = loadAPIKey;
+
+async function enhancePrompt() {
+  const apikey = document.getElementById('apikey').value;
+  const promptText = document.getElementById("output").textContent;
+  if (!apikey || !promptText) return alert("Lengkapi API Key dan hasil prompt terlebih dahulu.");
+
+  const body = {
+    contents: [{ parts: [{ text: "Tolong perbaiki dan tingkatkan kualitas sinematik dari prompt video berikut:
+
+" + promptText }] }]
+  };
+
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apikey, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json();
+  try {
+    const hasil = data.candidates?.[0]?.content?.parts?.[0]?.text || "Tidak ada balasan dari Gemini.";
+    document.getElementById("output").textContent = hasil;
+  } catch (e) {
+    alert("Gagal enhance prompt.");
+  }
+}
+</script>
+
+</body>
+</html>
